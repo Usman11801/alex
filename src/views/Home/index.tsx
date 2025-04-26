@@ -112,7 +112,9 @@ const Home = () => {
       try {
         // First call the custom endpoint
         const customEndpointResponse = await fetch(
-          `http://16.16.110.150/query?message=${encodeURIComponent(question)}`
+          `https://ignitecompliance.app/query?message=${encodeURIComponent(
+            question
+          )}`
         );
 
         if (!customEndpointResponse.ok) {
