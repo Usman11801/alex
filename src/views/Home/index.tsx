@@ -123,48 +123,52 @@ const Home = () => {
 
         const customData = await customEndpointResponse.json();
 
-        // If we have a response from custom endpoint, proceed with AI chat
+        // Only show the response from the custom endpoint in the UI
         if (customData) {
-          if (!remainingTokens) {
-            setMessages((pre) => pre.slice(0, -1));
-            toast("Insufficient tokens", "error");
-            return;
-          }
-
-          const res = await sendChatMessage({
-            question: question,
-            history: history,
-            amendment: amendment,
-            customResponse: customData,
-          }).unwrap();
-
-          const { text, sourceDocuments, questionTokens, answerTokens } = res;
-          if (remainingTokens !== LIMIT_TOKENS.PAID) {
-            toast(`Tokens consumed: ${questionTokens + answerTokens}`, "info");
-          }
-
-          if (remainingTokens !== LIMIT_TOKENS.PAID) {
-            await setRemainingTokens({
-              userId: currentUser?.uid as string,
-              tokens: remainingTokens - (questionTokens + answerTokens),
-            }).unwrap();
-          }
-
           setMessages((pre) => pre.slice(0, -1));
           setMessages((pre) => [
             ...pre,
-            { type: "bot", text, sourceDocs: sourceDocuments },
+            {
+              type: "bot",
+              text:
+                typeof customData === "string"
+                  ? customData
+                  : customData.response || JSON.stringify(customData),
+            },
           ]);
-          setHistory((pre) => [...pre, [question, text]]);
+          setHistory((pre) => [
+            ...pre,
+            [
+              question,
+              typeof customData === "string"
+                ? customData
+                : customData.response || JSON.stringify(customData),
+            ],
+          ]);
           inputRef.current?.focus();
 
+          // Optionally save chat if needed
           const newMessages = [
             ...messages,
             { type: "user", text: question },
-            { type: "bot", text, sourceDocs: sourceDocuments },
+            {
+              type: "bot",
+              text:
+                typeof customData === "string"
+                  ? customData
+                  : customData.response || JSON.stringify(customData),
+            },
           ] as IMessage[];
 
-          const newHistory = [...history, [question, text]] as IHistory;
+          const newHistory = [
+            ...history,
+            [
+              question,
+              typeof customData === "string"
+                ? customData
+                : customData.response || JSON.stringify(customData),
+            ],
+          ] as IHistory;
           handleSaveChat(newMessages, newHistory);
         }
       } catch (error) {
